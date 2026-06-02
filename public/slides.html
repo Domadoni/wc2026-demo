@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC 2026 Analyser — Presentation</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: #0f172a;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 48px 64px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    background: #f1f5f9;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* Nav */
+  .nav {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    padding: 8px 20px;
+    z-index: 100;
+  }
+  .nav button {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.15s;
+  }
+  .nav button:hover { color: white; }
+  .nav button:disabled { opacity: 0.3; cursor: default; }
+  .nav .counter { color: #64748b; font-size: 12px; font-weight: 600; min-width: 40px; text-align: center; }
+  .nav .dots { display: flex; gap: 6px; align-items: center; }
+  .nav .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #334155; transition: background 0.2s;
+    cursor: pointer;
+  }
+  .nav .dot.active { background: #fbbf24; }
+
+  /* ─── SLIDE CHROME ─── */
+  .slide-inner {
+    width: 100%;
+    max-width: 1100px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+
+  .slide-header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    padding: 28px 40px;
+  }
+  .slide-header .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fbbf24;
+    margin-bottom: 6px;
+  }
+  .slide-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: white;
+    font-family: Georgia, serif;
+  }
+
+  .slide-body {
+    padding: 32px 40px;
+  }
+
+  /* ─── SLIDE 1 ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .col-red {
+    background: #fef2f2;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .col-green {
+    background: #f0fdf4;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .col-label {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .col-label.red { color: #dc2626; }
+  .col-label.green { color: #16a34a; }
+  .col-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .col-list li {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #334155;
+    padding-left: 14px;
+    position: relative;
+  }
+  .col-list li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: #94a3b8;
+  }
+  .col-list li strong { color: #0f172a; }
+
+  /* ─── SLIDE 2 ─── */
+  .name-row {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    margin-bottom: 12px;
+  }
+  .name-row-label {
+    background: #0f172a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .name-row-cells {
+    padding: 10px 14px;
+    display: grid;
+    gap: 6px;
+  }
+  .name-row-cells.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .name-row-cells.two  { grid-template-columns: 1fr 1fr; }
+  .name-cell {
+    border-radius: 6px;
+    padding: 7px 10px;
+    text-align: center;
+  }
+  .name-cell .src { font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .name-cell .val { font-size: 12px; font-weight: 700; }
+  .nc-blue  { background: #eff6ff; } .nc-blue  .val { color: #1e3a8a; }
+  .nc-amber { background: #fef3c7; } .nc-amber .val { color: #92400e; }
+  .nc-green { background: #f0fdf4; } .nc-green .val { color: #166534; }
+  .nc-purple{ background: #fdf4ff; } .nc-purple .val { color: #6b21a8; }
+  .name-note { font-size: 11px; color: #64748b; margin-top: 5px; padding: 0 4px; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #dc2626;
+    margin-bottom: 8px;
+  }
+
+  .iteration-row {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .iter-step {
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-align: center;
+    min-width: 88px;
+    flex-shrink: 0;
+  }
+  .iter-step .step-label { font-size: 10px; font-weight: 700; margin-bottom: 2px; }
+  .iter-step .step-desc  { font-size: 11px; color: #475569; line-height: 1.3; }
+  .iter-step .step-result{ font-size: 11px; font-weight: 700; margin-top: 3px; }
+  .iter-arrow { color: #94a3b8; font-size: 16px; flex-shrink: 0; }
+
+  /* ─── SLIDE 3 ─── */
+  .probe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .probe-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .probe-table thead tr { background: #f1f5f9; }
+  .probe-table th { padding: 7px 10px; text-align: left; font-weight: 700; font-size: 11px; color: #475569; }
+  .probe-table td { padding: 6px 10px; border-top: 1px solid #f1f5f9; }
+  .probe-table tr.ok { background: #f0fdf4; }
+  .bad { color: #dc2626; font-weight: 600; }
+  .good { color: #16a34a; font-weight: 600; }
+  .terminal {
+    background: #0f172a;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    line-height: 1.9;
+    color: #22c55e;
+  }
+  .terminal .dim  { color: #475569; }
+  .terminal .found { color: #fbbf24; font-weight: 700; }
+  .probe-note { font-size: 11px; color: #64748b; margin-top: 10px; }
+
+  /* ─── SLIDE 4 ─── */
+  .learnings { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .learning {
+    border-radius: 0 12px 12px 0;
+    padding: 16px;
+    border-left: 4px solid;
+  }
+  .learning h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .learning p  { font-size: 12px; color: #475569; line-height: 1.7; }
+  .l-blue   { background: #f0f9ff; border-color: #0ea5e9; } .l-blue h3   { color: #0369a1; }
+  .l-purple { background: #fdf4ff; border-color: #a855f7; } .l-purple h3 { color: #7e22ce; }
+  .l-green  { background: #f0fdf4; border-color: #22c55e; } .l-green h3  { color: #15803d; }
+  .l-amber  { background: #fffbeb; border-color: #f59e0b; } .l-amber h3  { color: #b45309; }
+
+  /* ─── TITLE SLIDE ─── */
+  #slide-0 {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  }
+  #slide-0 .title-inner {
+    text-align: center;
+    color: white;
+    max-width: 800px;
+  }
+  #slide-0 .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #fbbf24;
+    margin-bottom: 20px;
+  }
+  #slide-0 h1 {
+    font-family: Georgia, serif;
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+  #slide-0 h1 span { color: #fbbf24; }
+  #slide-0 .subtitle {
+    font-size: 17px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+  #slide-0 .stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+  }
+  #slide-0 .stat-num { font-size: 28px; font-weight: 800; color: #fbbf24; }
+  #slide-0 .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; margin-top: 2px; }
+
+  .hint {
+    position: fixed;
+    top: 20px;
+    right: 28px;
+    font-size: 11px;
+    color: #334155;
+    background: rgba(255,255,255,0.08);
+    padding: 5px 12px;
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+  }
+</style>
+</head>
+<body>
+
+<div class="hint">← → or click arrows to navigate</div>
+
+<div class="deck">
+
+  <!-- ─── TITLE SLIDE ─── -->
+  <div class="slide active" id="slide-0">
+    <div class="title-inner">
+      <div class="eyebrow">FIFA World Cup 2026 · Data Engineering Project</div>
+      <h1>48 Teams.<br><span>One Database.</span><br>Two Weeks with AI.</h1>
+      <p class="subtitle">How we scraped, cleaned and linked 1,500+ players across<br>three sources — and what went wrong along the way.</p>
+      <div class="stats">
+        <div><div class="stat-num">48</div><div class="stat-label">Nations</div></div>
+        <div><div class="stat-num">1,800+</div><div class="stat-label">Players tracked</div></div>
+        <div><div class="stat-num">1,000+</div><div class="stat-label">Matches scraped</div></div>
+        <div><div class="stat-num">2 weeks</div><div class="stat-label">With Claude</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 1 — SCRAPING WAR ─── -->
+  <div class="slide" id="slide-1">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <div class="eyebrow">Slide 1 of 4 · The data pipeline</div>
+        <h1>"Getting the data wasn't easy"</h1>
+      </div>
+      <div class="slide-body">
+        <div class="two-col">
+          <div class="col-red">
+            <div class="col-label red">❌ What we hit</div>
+            <ul class="col-list">
+              <li>FBref hides behind <strong>Cloudflare</strong> — blocks any automated request instantly</li>
+              <li>Transfermarkt <strong>rate limits</strong> aggressively — scrape too fast and you're banned</li>
+              <li><strong>38 of 48</strong> national team IDs were silently wrong — Germany's ID loaded France's squad</li>
+              <li>World Cup squad list had <strong>"(captain)"</strong> appended to 43 player names</li>
+            </ul>
+          </div>
+          <div class="col-green">
+            <div class="col-label green">✅ How we solved it</div>
+            <ul class="col-list">
+              <li>Routed FBref through <strong>FlareSolverr</strong> — a headless browser that solves Cloudflare challenges</li>
+              <li>Built in <strong>3–6 second delays</strong> between requests ("polite scraping")</li>
+              <li>Wrote a probe script scanning <strong>2,000+ IDs</strong>, read page titles back, fixed all 38 in one pass</li>
+              <li>Single SQL regex cleaned all <strong>43 captain suffixes</strong> at the database level</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 2 — NAME PROBLEM ─── -->
+  <div class="slide" id="slide-2">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <div class="eyebrow">Slide 2 of 4 · Data canonicalisation</div>
+        <h1>"The same player. Four different names."</h1>
+      </div>
+      <div class="slide-body" style="padding-top:24px;padding-bottom:24px;">
+
+        <!-- South Korea -->
+        <div class="section-label">South Korea — romanisation inconsistency</div>
+        <div class="name-row" style="margin-bottom:8px;">
+          <div class="name-row-label">🇰🇷 Son<br>Heung-min</div>
+          <div>
+            <div class="name-row-cells four">
+              <div class="name-cell nc-blue">  <div class="src">FBref</div>      <div class="val">Son Heung-min</div></div>
+              <div class="name-cell nc-amber"> <div class="src">Transfermarkt</div><div class="val">Son Heung-Min</div></div>
+              <div class="name-cell nc-green"> <div class="src">WC Squad list</div><div class="val">Heung-Min Son</div></div>
+              <div class="name-cell nc-purple"><div class="src">Korean</div>      <div class="val">손흥민</div></div>
+            </div>
+            <div class="name-note">Capital M · reversed name order · Korean script · four sources, zero exact matches with each other</div>
+          </div>
+        </div>
+
+        <!-- Egypt -->
+        <div class="section-label" style="margin-top:14px;">Egypt — cultural nickname</div>
+        <div class="name-row" style="margin-bottom:12px;">
+          <div class="name-row-label">🇪🇬 Zizo<br><span style="font-size:11px;font-weight:400;color:#94a3b8">62 caps</span></div>
+          <div>
+            <div class="name-row-cells two">
+              <div class="name-cell nc-blue"> <div class="src">FBref</div>        <div class="val">Mahmoud Abdel-Razek</div></div>
+              <div class="name-cell nc-amber"><div class="src">WC Squad list</div><div class="val">Zizo</div></div>
+            </div>
+            <div class="name-note">No fuzzy match, no Unicode fix bridges this — it needs a manually curated alias table</div>
+          </div>
+        </div>
+
+        <!-- Iteration -->
+        <div class="iteration-row">
+          <div style="font-size:11px;font-weight:700;color:#475569;margin-right:6px;white-space:nowrap;">The iteration</div>
+          <div class="iter-step" style="background:#fee2e2;">
+            <div class="step-label" style="color:#dc2626;">Attempt 1</div>
+            <div class="step-desc">Exact match</div>
+            <div class="step-result" style="color:#dc2626;">0 results</div>
+          </div>
+          <div class="iter-arrow">→</div>
+          <div class="iter-step" style="background:#fef3c7;">
+            <div class="step-label" style="color:#d97706;">Attempt 2</div>
+            <div class="step-desc">Basic fuzzy</div>
+            <div class="step-result" style="color:#d97706;">Wrong matches</div>
+          </div>
+          <div class="iter-arrow">→</div>
+          <div class="iter-step" style="background:#dcfce7;">
+            <div class="step-label" style="color:#16a34a;">Attempt 3</div>
+            <div class="step-desc">Name reversal + case-fold</div>
+            <div class="step-result" style="color:#16a34a;">✅ Matched</div>
+          </div>
+          <div class="iter-arrow">→</div>
+          <div class="iter-step" style="background:#f3e8ff;">
+            <div class="step-label" style="color:#7c3aed;">Nicknames</div>
+            <div class="step-desc">Manual aliases</div>
+            <div class="step-result" style="color:#7c3aed;">Human loop</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 3 — TM ID PROBE ─── -->
+  <div class="slide" id="slide-3">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <div class="eyebrow">Slide 3 of 4 · Silent data corruption</div>
+        <h1>"38 of 48 IDs were silently wrong"</h1>
+      </div>
+      <div class="slide-body">
+        <div class="probe-grid">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:10px;">Config said → what actually loaded</div>
+            <table class="probe-table">
+              <thead>
+                <tr>
+                  <th>Country</th>
+                  <th>Config ID</th>
+                  <th>Actually loaded</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>🇩🇪 Germany</td>  <td class="bad">3377</td><td class="bad">🇫🇷 France</td></tr>
+                <tr><td>🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</td>  <td class="bad">3388</td><td class="bad">🇨🇾 Cypriot club</td></tr>
+                <tr><td>🇯🇵 Japan</td>    <td class="bad">3606</td><td class="bad">🇸🇪 Swedish club</td></tr>
+                <tr class="ok"><td>🇳🇱 Netherlands</td><td class="good">3379</td><td class="good">✅ Netherlands</td></tr>
+              </tbody>
+            </table>
+            <p class="probe-note">No error thrown. No warning. Each scrape silently returned the wrong team's data.</p>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#1e3a8a;margin-bottom:10px;">The fix: scan 2,000+ IDs automatically</div>
+            <div class="terminal">
+              <span class="dim">ID=3375:</span> 'Spain' ✅<br>
+              <span class="dim">ID=3376:</span> 'Italy' <span class="dim">❌</span><br>
+              <span class="dim">ID=3377:</span> 'France' ✅<br>
+              <span class="dim">ID=3378:</span> 'Greece' <span class="dim">❌</span><br>
+              <span class="dim">ID=3379:</span> 'Netherlands' ✅<br>
+              <span class="dim">...</span><br>
+              <span class="found">ID=3262: 'Germany' ✅ ← found it</span><br>
+              <span class="found">ID=3299: 'England' ✅ ← found it</span>
+            </div>
+            <p class="probe-note">Probe read the page title back for every ID. Took 20 minutes to run. Fixed all 38 wrong IDs in one automated pass.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SLIDE 4 — WHAT I LEARNED ─── -->
+  <div class="slide" id="slide-4">
+    <div class="slide-inner">
+      <div class="slide-header">
+        <div class="eyebrow">Slide 4 of 4 · Personal reflection</div>
+        <h1>"What two weeks with AI actually taught me"</h1>
+      </div>
+      <div class="slide-body">
+        <div class="learnings">
+          <div class="learning l-blue">
+            <h3>🤝 Be polite — even to servers</h3>
+            <p>Scraping too fast gets you banned. Real-world data pipelines need sleep windows, retries, and rate limits. AI helped build it — but understanding <em>why</em> it was needed came first.</p>
+          </div>
+          <div class="learning l-purple">
+            <h3>🗄️ Fix data at the source</h3>
+            <p>43 players had "(captain)" in their name. One SQL UPDATE fixed all 43 permanently. Application-level patches would have hidden the problem forever.</p>
+          </div>
+          <div class="learning l-green">
+            <h3>🌍 Unicode is a world problem</h3>
+            <p>Son Heung-min vs Son Heung-Min. Junya Ito vs Junya Itō. Characters that look identical but aren't. You can't solve what you don't know exists — AI surfaced it immediately once described correctly.</p>
+          </div>
+          <div class="learning l-amber">
+            <h3>🗣️ Describing the problem IS the skill</h3>
+            <p>"The names don't match" → nothing useful. "FBref reverses Korean name order, Transfermarkt capitalises mid-name" → working solution in minutes. The quality of the output is the quality of your description.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- Navigation -->
+<nav class="nav">
+  <button id="prev" onclick="go(-1)" disabled>←</button>
+  <div class="dots" id="dots"></div>
+  <button id="next" onclick="go(1)">→</button>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide')
+  const total = slides.length
+  let cur = 0
+
+  const dotsEl = document.getElementById('dots')
+  const prevBtn = document.getElementById('prev')
+  const nextBtn = document.getElementById('next')
+
+  // Build dots
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div')
+    d.className = 'dot' + (i === 0 ? ' active' : '')
+    d.onclick = () => goTo(i)
+    dotsEl.appendChild(d)
+  }
+
+  function goTo(n) {
+    slides[cur].classList.remove('active')
+    dotsEl.children[cur].classList.remove('active')
+    cur = Math.max(0, Math.min(total - 1, n))
+    slides[cur].classList.add('active')
+    dotsEl.children[cur].classList.add('active')
+    prevBtn.disabled = cur === 0
+    nextBtn.disabled = cur === total - 1
+  }
+
+  function go(dir) { goTo(cur + dir) }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ')  go(1)
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     go(-1)
+  })
+</script>
+</body>
+</html>
