@@ -4,6 +4,7 @@ import { api } from '../api'
 import { computeTeamStats } from '../hooks/useTeamStats'
 import StatBox from './StatBox'
 import NewsCard from './NewsCard'
+import skMatchPlayers from '../data/south_korea_match_players.js'
 
 const TABS = ['Recent Results', 'Squad', "Since '24"]
 
@@ -40,14 +41,79 @@ function ResultBadge({ score, isWin, isDraw }) {
   return <span className={`font-bold text-[14px] ${cls}`} style={{ fontFamily: 'Georgia, serif' }}>{score}</span>
 }
 
+const POS_ORDER = { GK: 0, GKP: 0, CD: 1, LCD: 1, RCD: 1, LD: 1, RD: 1, LWB: 2, RWB: 2, CDM: 2, LDM: 2, RDM: 2, CM: 3, LCM: 3, RCM: 3, LM: 3, RM: 3, CAM: 4, LAM: 4, RAM: 4, LW: 5, RW: 5, SS: 5, CF: 5, ST: 5 }
+const POS_COLOR = (pos) => {
+  if (!pos) return 'bg-[#f1f5f9] text-[#475569]'
+  const o = POS_ORDER[pos] ?? 3
+  if (pos === 'GK' || pos === 'GKP') return 'bg-[#fef9c3] text-[#854d0e]'
+  if (o <= 2) return 'bg-[#dcfce7] text-[#166534]'
+  if (o <= 4) return 'bg-[#dbeafe] text-[#1e40af]'
+  return 'bg-[#fee2e2] text-[#991b1b]'
+}
+
+function MatchPlayerPanel({ matchId }) {
+  const players = skMatchPlayers[String(matchId)]
+  if (!players?.length) return null
+
+  const starters = players.filter((p) => !p.is_substitute).sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9))
+  const subs = players.filter((p) => p.is_substitute).sort((a, b) => (POS_ORDER[a.position] ?? 9) - (POS_ORDER[b.position] ?? 9))
+
+  return (
+    <div className="bg-[#f8fafc] border-t border-[#e2e8f0] px-4 py-4">
+      <div className="max-w-[900px]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#94a3b8] mb-3">Player Stats</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 mb-3">
+          {starters.map((p, i) => (
+            <div key={i} className="bg-white border border-[#e2e8f0] rounded-lg p-2.5 text-center">
+              <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded inline-block mb-1.5 ${POS_COLOR(p.position)}`}>
+                {p.position || '—'}
+              </span>
+              <div className="text-[12px] font-semibold text-[#0f172a] leading-tight mb-1">{p.name}</div>
+              <div className="flex items-center justify-center gap-2 text-[10px] text-[#64748b]">
+                {p.minutes_played != null && <span>⏱ {p.minutes_played}'</span>}
+                {p.shots > 0 && <span>🎯 {p.shots}</span>}
+                {p.assists > 0 && <span>🅰️ {p.assists}</span>}
+                {p.yellow_cards > 0 && <span>🟨</span>}
+                {p.red_cards > 0 && <span>🟥</span>}
+                {p.saves > 0 && <span>🧤 {p.saves}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+        {subs.length > 0 && (
+          <>
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#94a3b8] mb-2">Substitutes</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+              {subs.map((p, i) => (
+                <div key={i} className="bg-white border border-dashed border-[#e2e8f0] rounded-lg p-2.5 text-center opacity-75">
+                  <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded inline-block mb-1.5 ${POS_COLOR(p.position)}`}>
+                    {p.position || '—'}
+                  </span>
+                  <div className="text-[12px] font-semibold text-[#0f172a] leading-tight">{p.name}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ResultsTab({ matches, teamName, loading }) {
+  const [expandedMatch, setExpandedMatch] = useState(null)
+  const hasSKData = teamName === 'South Korea'
+
   if (loading) return <p className="text-[#94a3b8] text-sm p-6">Loading matches…</p>
 
   return (
     <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden shadow-sm">
       <div className="px-5 py-4 border-b border-[#f1f5f9]">
         <h2 className="text-[16px] font-bold" style={{ fontFamily: 'Georgia, serif' }}>Recent Results</h2>
-        <p className="text-[12px] text-[#94a3b8] mt-0.5">Last 20 competitive fixtures · xG, shots, possession per match</p>
+        <p className="text-[12px] text-[#94a3b8] mt-0.5">
+          Last 20 competitive fixtures · xG, shots, possession per match
+          {hasSKData && ' · Click any row for player stats'}
+        </p>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -72,28 +138,46 @@ function ResultsTab({ matches, teamName, loading }) {
               const opponent = isHome ? m.away_team   : m.home_team
               const isWin = myScore > oppScore
               const isDraw = myScore === oppScore
+              const isExpanded = expandedMatch === m.id
+              const clickable = hasSKData && skMatchPlayers[String(m.id)]
               return (
-                <tr key={m.id} className="border-b border-[#f8fafc] hover:bg-[#f8fafc] transition-colors">
-                  <td className="px-4 py-3 text-[13px] text-[#475569] whitespace-nowrap">{m.match_date}</td>
-                  <td className="px-4 py-3 text-[13px] font-medium text-[#0f172a]">{opponent}</td>
-                  <td className="px-4 py-3"><CompBadge comp={m.competition} /></td>
-                  <td className="px-4 py-3">
-                    <ResultBadge
-                      score={`${isWin ? 'W' : isDraw ? 'D' : 'L'} ${myScore}–${oppScore}`}
-                      isWin={isWin} isDraw={isDraw}
-                    />
-                  </td>
-                  <td className="px-4 py-3"><XgBar value={myStats?.xg} /></td>
-                  <td className="px-4 py-3 text-[12px] tabular-nums text-[#475569]">
-                    {(isHome ? m.away_stats?.xg : m.home_stats?.xg)?.toFixed(2) ?? '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right text-[13px] tabular-nums text-[#475569]">
-                    {myStats?.shots ?? '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right text-[13px] tabular-nums text-[#475569]">
-                    {myStats?.possession != null ? `${myStats.possession}%` : '—'}
-                  </td>
-                </tr>
+                <>
+                  <tr
+                    key={m.id}
+                    onClick={() => clickable && setExpandedMatch(isExpanded ? null : m.id)}
+                    className={`border-b border-[#f8fafc] transition-colors ${clickable ? 'cursor-pointer hover:bg-[#eff6ff]' : 'hover:bg-[#f8fafc]'} ${isExpanded ? 'bg-[#eff6ff]' : ''}`}
+                  >
+                    <td className="px-4 py-3 text-[13px] text-[#475569] whitespace-nowrap">
+                      {m.match_date}
+                      {clickable && <span className="ml-1.5 text-[10px] text-[#93c5fd]">{isExpanded ? '▲' : '▼'}</span>}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] font-medium text-[#0f172a]">{opponent}</td>
+                    <td className="px-4 py-3"><CompBadge comp={m.competition} /></td>
+                    <td className="px-4 py-3">
+                      <ResultBadge
+                        score={`${isWin ? 'W' : isDraw ? 'D' : 'L'} ${myScore}–${oppScore}`}
+                        isWin={isWin} isDraw={isDraw}
+                      />
+                    </td>
+                    <td className="px-4 py-3"><XgBar value={myStats?.xg} /></td>
+                    <td className="px-4 py-3 text-[12px] tabular-nums text-[#475569]">
+                      {(isHome ? m.away_stats?.xg : m.home_stats?.xg)?.toFixed(2) ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right text-[13px] tabular-nums text-[#475569]">
+                      {myStats?.shots ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right text-[13px] tabular-nums text-[#475569]">
+                      {myStats?.possession != null ? `${myStats.possession}%` : '—'}
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr key={`${m.id}-detail`}>
+                      <td colSpan={8} className="p-0">
+                        <MatchPlayerPanel matchId={m.id} />
+                      </td>
+                    </tr>
+                  )}
+                </>
               )
             })}
             {matches.length === 0 && (
