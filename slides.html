@@ -229,6 +229,19 @@
   .iter-step .step-result{ font-size: 11px; font-weight: 700; margin-top: 3px; }
   .iter-arrow { color: #94a3b8; font-size: 16px; flex-shrink: 0; }
 
+  /* ─── DATA SOURCES ─── */
+  .sources-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .source-block { border-radius: 10px; padding: 12px 14px; }
+  .source-block .source-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .source-block ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .source-block li { font-size: 12px; color: #334155; display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
+  .source-block li .tag { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 4px; white-space: nowrap; margin-top: 1px; flex-shrink: 0; }
+  .sb-green { background: #f0fdf4; } .sb-green .source-title { color: #16a34a; }
+  .sb-red   { background: #fef2f2; } .sb-red   .source-title { color: #dc2626; }
+  .tag-green { background: #dcfce7; color: #166534; }
+  .tag-red   { background: #fee2e2; color: #991b1b; }
+  .tag-amber { background: #fef3c7; color: #92400e; }
+
   /* ─── SLIDE 3 ─── */
   .probe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .probe-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -345,12 +358,13 @@
         <div class="eyebrow">Slide 1 of 4 · The data pipeline</div>
         <h1>"Getting the data wasn't easy"</h1>
       </div>
-      <div class="slide-body">
-        <div class="two-col">
+      <div class="slide-body" style="padding-top:20px;padding-bottom:20px;">
+        <div class="two-col" style="margin-bottom:16px;">
           <div class="col-red">
             <div class="col-label red">❌ What we hit</div>
             <ul class="col-list">
               <li>FBref hides behind <strong>Cloudflare</strong> — blocks any automated request instantly</li>
+              <li>SofaScore also behind Cloudflare — <strong>unofficial API</strong> with no public docs, endpoints reverse-engineered from browser traffic</li>
               <li>Transfermarkt <strong>rate limits</strong> aggressively — scrape too fast and you're banned</li>
               <li><strong>38 of 48</strong> national team IDs were silently wrong — Germany's ID loaded France's squad</li>
               <li>World Cup squad list had <strong>"(captain)"</strong> appended to 43 player names</li>
@@ -359,10 +373,33 @@
           <div class="col-green">
             <div class="col-label green">✅ How we solved it</div>
             <ul class="col-list">
-              <li>Routed FBref through <strong>FlareSolverr</strong> — a headless browser that solves Cloudflare challenges</li>
+              <li>Routed FBref <strong>and</strong> SofaScore through <strong>FlareSolverr</strong> — a headless browser that solves Cloudflare challenges automatically</li>
+              <li>Cross-referenced SofaScore events to FBref matches by <strong>date + fuzzy team name</strong> — accounting for timezone rollover on evening kickoffs</li>
               <li>Built in <strong>3–6 second delays</strong> between requests ("polite scraping")</li>
-              <li>Wrote a probe script scanning <strong>2,000+ IDs</strong>, read page titles back, fixed all 38 in one pass</li>
+              <li>Probe script scanned <strong>2,000+ IDs</strong>, fixed all 38 in one automated pass</li>
               <li>Single SQL regex cleaned all <strong>43 captain suffixes</strong> at the database level</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Data sources -->
+        <div class="sources-grid">
+          <div class="source-block sb-green">
+            <div class="source-title">✅ Sources we used</div>
+            <ul>
+              <li><span class="tag tag-green">FBref</span> Match results, xG, squad stats — via FlareSolverr</li>
+              <li><span class="tag tag-green">Transfermarkt</span> Player valuations, caps, DOB — polite scraping</li>
+              <li><span class="tag tag-green">SofaScore</span> xG, lineups, player stats — unofficial API via FlareSolverr</li>
+              <li><span class="tag tag-green">Wikipedia</span> Official WC 2026 confirmed squads</li>
+              <li><span class="tag tag-amber">API-Football</span> Gap-filling for missing match stats</li>
+            </ul>
+          </div>
+          <div class="source-block sb-red">
+            <div class="source-title">❌ Sources we couldn't use</div>
+            <ul>
+              <li><span class="tag tag-red">Flashscores</span> Playwright too detectable — fingerprinting defeated headless browser</li>
+              <li><span class="tag tag-red">SofaScore direct</span> Blocked without FlareSolverr — every plain request returns 403</li>
+              <li><span class="tag tag-red">Official FIFA API</span> No public access — closed to third parties</li>
             </ul>
           </div>
         </div>
