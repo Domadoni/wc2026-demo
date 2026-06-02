@@ -528,7 +528,7 @@ export default {
       "age": 21,
       "country_caps": 3,
       "market_value_m": null,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 6299,
@@ -834,7 +834,7 @@ export default {
       "age": 23,
       "country_caps": 5,
       "market_value_m": 40.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 2360,

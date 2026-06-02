@@ -429,7 +429,7 @@ export default {
       "age": 29,
       "country_caps": 19,
       "market_value_m": 1.7,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 217,
@@ -447,7 +447,7 @@ export default {
       "age": 41,
       "country_caps": 42,
       "market_value_m": null,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 66,
@@ -474,7 +474,7 @@ export default {
       "age": 25,
       "country_caps": 7,
       "market_value_m": null,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 219,
@@ -501,7 +501,7 @@ export default {
       "age": 23,
       "country_caps": 6,
       "market_value_m": null,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 96,
@@ -627,7 +627,7 @@ export default {
       "age": 30,
       "country_caps": 13,
       "market_value_m": 1.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 135,
@@ -681,7 +681,7 @@ export default {
       "age": 28,
       "country_caps": 2,
       "market_value_m": 1.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 224,
@@ -717,7 +717,7 @@ export default {
       "age": 23,
       "country_caps": 14,
       "market_value_m": 2.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 65,
@@ -726,7 +726,7 @@ export default {
       "age": 24,
       "country_caps": 9,
       "market_value_m": 1.8,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 197,
@@ -771,7 +771,7 @@ export default {
       "age": 22,
       "country_caps": 13,
       "market_value_m": 4.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 63,
@@ -861,7 +861,7 @@ export default {
       "age": 30,
       "country_caps": 35,
       "market_value_m": 0.75,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 288,
@@ -897,7 +897,7 @@ export default {
       "age": 24,
       "country_caps": 8,
       "market_value_m": 5.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 140,

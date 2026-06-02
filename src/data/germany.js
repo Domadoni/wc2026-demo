@@ -492,7 +492,7 @@ export default {
       "age": 22,
       "country_caps": 10,
       "market_value_m": 90.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 2266,

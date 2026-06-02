@@ -798,7 +798,7 @@ export default {
       "age": null,
       "country_caps": null,
       "market_value_m": null,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 4307,

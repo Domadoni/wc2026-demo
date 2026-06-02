@@ -438,7 +438,7 @@ export default {
       "age": 34,
       "country_caps": 69,
       "market_value_m": 2.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 2568,
@@ -528,7 +528,7 @@ export default {
       "age": 27,
       "country_caps": 5,
       "market_value_m": null,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 2583,
@@ -798,7 +798,7 @@ export default {
       "age": 25,
       "country_caps": 48,
       "market_value_m": 150.0,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 1309,
@@ -969,7 +969,7 @@ export default {
       "age": null,
       "country_caps": null,
       "market_value_m": null,
-      "in_wc_squad": false
+      "in_wc_squad": true
     },
     {
       "id": 2640,
