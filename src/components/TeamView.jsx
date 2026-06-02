@@ -3,6 +3,7 @@ import { useTeam } from '../context/TeamContext'
 import { api } from '../api'
 import { computeTeamStats } from '../hooks/useTeamStats'
 import StatBox from './StatBox'
+import NewsCard from './NewsCard'
 
 const TABS = ['Recent Results', 'Squad', "Since '24"]
 
@@ -109,7 +110,19 @@ function ResultsTab({ matches, teamName, loading }) {
   )
 }
 
-function SquadTab({ players, loading }) {
+function SquadTab({ players, teamName, loading }) {
+  const [news, setNews] = useState([])
+  const [newsLoading, setNewsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!teamName) return
+    setNewsLoading(true)
+    api.news(teamName)
+      .then(setNews)
+      .catch(() => setNews([]))
+      .finally(() => setNewsLoading(false))
+  }, [teamName])
+
   const posOrder = { GK: 0, RD: 1, RCD: 1, CD: 1, LCD: 1, LD: 1, RWB: 2, LWB: 2, RDM: 2, CDM: 2, LDM: 2, RM: 3, RCM: 3, CM: 3, LCM: 3, LM: 3, RAM: 4, CAM: 4, LAM: 4, RW: 5, SS: 5, CF: 5, LW: 5, ST: 5 }
   const posClass = (pos) => {
     if (!pos) return 'bg-[#f1f5f9] text-[#475569]'
@@ -129,6 +142,7 @@ function SquadTab({ players, loading }) {
   if (loading) return <p className="text-[#94a3b8] text-sm p-6">Loading squad…</p>
 
   return (
+    <div className="space-y-4">
     <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden shadow-sm">
       <div className="px-5 py-4 border-b border-[#f1f5f9]">
         <h2 className="text-[16px] font-bold" style={{ fontFamily: 'Georgia, serif' }}>Squad</h2>
@@ -178,6 +192,33 @@ function SquadTab({ players, loading }) {
         )}
       </div>
     </div>
+
+    {/* Team news */}
+    <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden shadow-sm">
+      <div className="px-5 py-4 border-b border-[#f1f5f9]">
+        <h2 className="text-[16px] font-bold" style={{ fontFamily: 'Georgia, serif' }}>Team News</h2>
+        <p className="text-[12px] text-[#94a3b8] mt-0.5">Latest articles · Google News</p>
+      </div>
+      {newsLoading ? (
+        <p className="text-[#94a3b8] text-sm p-6">Loading news…</p>
+      ) : news.length === 0 ? (
+        <p className="text-[#94a3b8] text-sm p-6">No news articles found.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-5">
+          {news.map((article, i) => (
+            <NewsCard
+              key={i}
+              source={article.source}
+              title={article.title}
+              summary={article.summary}
+              url={article.url}
+              publishedAt={article.published_iso ? new Date(article.published_iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : null}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
   )
 }
 
@@ -319,7 +360,7 @@ export default function TeamView() {
       {/* Tab panels */}
       <div className="max-w-[1100px] mx-auto px-6 py-7 pb-16">
         {activeTab === 0 && <ResultsTab matches={matches} teamName={selectedTeam.name} loading={loading} />}
-        {activeTab === 1 && <SquadTab players={players} loading={loading} />}
+        {activeTab === 1 && <SquadTab players={players} teamName={selectedTeam.name} loading={loading} />}
         {activeTab === 2 && <Since24Tab matches={matches} teamName={selectedTeam.name} loading={loading} />}
       </div>
     </>

@@ -46,4 +46,25 @@ export const api = {
     return Promise.resolve(squadsData)
   },
   squadCountries: () => Promise.resolve(squadCountriesData),
+  news: (teamName) => {
+    const query = encodeURIComponent(`${teamName} football 2026 World Cup`)
+    const rssUrl = encodeURIComponent(
+      `https://news.google.com/rss/search?q=${query}&hl=en-GB&gl=GB&ceid=GB:en`
+    )
+    return fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.items) return []
+        return data.items.slice(0, 8).map((item) => ({
+          source: item.source || 'Google News',
+          title: item.title,
+          summary: item.description
+            ? item.description.replace(/<[^>]*>/g, '').slice(0, 200)
+            : '',
+          url: item.link,
+          published_iso: item.pubDate,
+        }))
+      })
+      .catch(() => [])
+  },
 }
